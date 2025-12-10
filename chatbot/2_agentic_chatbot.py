@@ -1,4 +1,3 @@
-2
 import chainlit as cl
 import dotenv
 
@@ -6,25 +5,15 @@ dotenv.load_dotenv()
 
 from openai.types.responses import ResponseTextDeltaEvent
 
-from agents import Runner, SQLiteSession
+from agents import Runner
 from nutrition_agent import nutrition_agent
-
-
-@cl.on_chat_start
-async def on_chat_start():
-    session = SQLiteSession ("conversation_history")
-    cl.user_session.set("agent_session", session)
-
 
 
 @cl.on_message
 async def on_message(message: cl.Message):
-    session = cl.user_session.get("agent_session")
-
     result = Runner.run_streamed(
         nutrition_agent, 
-        message.content,
-        sesssion=session
+        message.content
     )
 
     msg = cl.Message(content = "")
@@ -45,10 +34,18 @@ async def on_message(message: cl.Message):
         ):
             with cl.Step(name=f"{event.data.item.name}", type="tool") as step:
                 step.input=event.data.item.arguments
-                print(f"\nTool call: {
-                    event.data.item.name} with args: {
-                    event.data.item.arguments}"
+                print(
+                    f"\nTool call: {
+                        event.data.item.name} with args: {
+                        event.data.item.arguments}"
                 )
 
-
     await msg.update()
+
+
+#@cl.on_chat_start
+#async def on_chat_start():
+#    session = SQLiteSession ("conversation_history")
+#    cl.user_session.set("agent_session", session)
+
+#    session = cl.user_session.get("agent_session")
